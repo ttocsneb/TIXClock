@@ -4,6 +4,7 @@
 
 #include "matrix_driver.h"
 #include "modes.h"
+#include "settings.h"
 
 
 #define MODE_TIME false
@@ -36,6 +37,8 @@ uint8_t current_min;
 void setup() {
     // We don't need to start Wire as it is started in clock.
     clock.begin();
+
+    settings::begin();
 
     const uint8_t rows[4] = {SEL_0, SEL_1, SEL_2, ROW_8};
     const uint8_t cols[3] = {COL_0, COL_1, COL_2};
