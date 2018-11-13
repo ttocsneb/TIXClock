@@ -16,15 +16,10 @@ public:
      * 
      * @param ... each pin the Bus is made from. (MSB is first)
      */
-    Bus(uint8_t num_pins, ...) {
+    Bus(uint8_t num_pins, const uint8_t *_pins) {
         size = num_pins;
         pins = new uint8_t[size];
-        
-        va_list ap;
-        va_start(ap, num_pins);
-        for(uint8_t i = size - 1; i >= 0; i--) {
-            pins[i] = static_cast<uint8_t>(va_arg(ap, int));
-        }
+        memcpy(pins, _pins, sizeof(uint8_t) * size);
     }
     ~Bus() {
         delete[] pins;
@@ -34,7 +29,8 @@ public:
      * Setup the Bus
      */
     bool begin(uint8_t pinmode) {
-        for(uint8_t i = 0; i < size; i++) {
+        uint8_t i = size;
+        while(i--) {
             pinMode(pins[i], pinmode);
         }
         return true;
@@ -46,7 +42,8 @@ public:
      * @param data the data to write.
      */
     void write(T data) {
-        for(uint8_t i = 0; i < size; i++) {
+        uint8_t i = size;
+        while(i--) {
             digitalWrite(pins[i], (data >> i) & 1);
         }
     }
@@ -59,7 +56,8 @@ public:
     T read() {
         T value = 0;
 
-        for (uint8_t i=0; i < size; i++) {
+        uint8_t i = size;
+        while(i--) {
             value = value | (digitalRead(pins[i]) << i);
         }
 
