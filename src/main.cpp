@@ -44,7 +44,6 @@ void setup() {
     const uint8_t rows[4] = {SEL_0, SEL_1, SEL_2, ROW_8};
     const uint8_t cols[3] = {COL_0, COL_1, COL_2};
     matrix_driver::begin(rows, cols, ENABLE);
-
 }
 
 void updateTime() {
@@ -64,7 +63,6 @@ AsyncDelay bakDelay(ASYNC_MILLIS, 1500);
 AsyncDelay pressDelay(ASYNC_MILLIS, 5);
 
 void loop() {
-
     // Process the button presses
 
     static bool last_sel_state(false);

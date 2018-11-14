@@ -203,5 +203,4 @@ void modes::update(Button select, Button back) {
 }
 
 void modes::begin() {
-
 }

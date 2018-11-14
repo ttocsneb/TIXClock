@@ -26,7 +26,6 @@ const uint8_t section_index[5] = {0, 1, 4, 6, 9};
 
 
 void matrix_driver::begin(const uint8_t _row_pins[4], const uint8_t _col_pins[3], uint8_t _enable_pin) {
-
     // set the row pins
     memcpy(col_pins, _col_pins, sizeof(uint8_t) * 3);
     row_8 = _row_pins[3];
@@ -62,7 +61,6 @@ void matrix_driver::begin(const uint8_t _row_pins[4], const uint8_t _col_pins[3]
             leds[i][ii] = false;
         }
     }
-
 }
 
 void matrix_driver::setRow(uint8_t row, const bool set[3]) {
@@ -137,14 +135,12 @@ AsyncDelay dutyCycle(ASYNC_MICROS);
 uint8_t delayCache = 0;
 
 void matrix_driver::update() {
-
     if(!dutyCycle.finished(false)) {
         delayMicroseconds(dutyCycle.timeLeft());
     }
 
     uint8_t i = 9;
     while(i--) {
-
         // disable the leds while changing rows.
         uint8_t col = 3;
         while(col--)

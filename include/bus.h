@@ -8,6 +8,7 @@ class Bus {
 private:
     uint8_t* pins;
     uint8_t size;
+
 public:
     /**
      * Create a new bus.
@@ -63,7 +64,6 @@ public:
 
         return value;
     }
-
 };
 
 #endif
