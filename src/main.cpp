@@ -56,8 +56,6 @@ void updateTime() {
 
 // Set Time Functions
 
-#define LONG_PRESS_TIME 1500
-
 AsyncDelay selDelay(ASYNC_MILLIS, 1500);
 AsyncDelay bakDelay(ASYNC_MILLIS, 1500);
 AsyncDelay pressDelay(ASYNC_MILLIS, 5);
