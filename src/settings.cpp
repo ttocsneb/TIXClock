@@ -2,8 +2,17 @@
 
 #include <EEPROM.h>
 
+uint8_t INITIALIZED_ADDR = 0x00;
+uint8_t INITIALIZED_VAL = 0xAA;
+
 void settings::begin() {
     EEPROM.begin();
+
+    if(EEPROM.read(INITIALIZED_ADDR) != INITIALIZED_VAL) {
+        brightness::set(255);
+        update_time::set(15000);
+        EEPROM.write(INITIALIZED_ADDR, INITIALIZED_VAL);
+    }
 }
 
 void write(uint8_t len, uint8_t location, long value) {

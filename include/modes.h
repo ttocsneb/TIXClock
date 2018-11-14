@@ -18,6 +18,8 @@ namespace modes {
     Mode getMode();
 
     void update(Button select, Button back);
+
+    void begin();
 };
 
 #endif
