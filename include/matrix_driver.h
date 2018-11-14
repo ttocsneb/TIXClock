@@ -4,6 +4,7 @@
 #include <stdint.h>
 
 #define FREQUENCY 1000
+#define DUTY_FREQUENCY 255
 
 namespace matrix_driver {
     void begin(const uint8_t row_pins[4], const uint8_t col_pins[3], uint8_t enable_pin);

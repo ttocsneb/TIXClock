@@ -39,3 +39,7 @@ bool AsyncDelay::finished(bool resetOnDone) {
     }
     return false;
 }
+
+unsigned long AsyncDelay::timeLeft() {
+    return delay - (get_time(type) - start_time);
+}

@@ -3,9 +3,13 @@
 // Calculate the delay(us) required to get the propper frequency
 const unsigned int FREQUENCY_DELAY = 1000000 / (FREQUENCY * 9);
 
+const unsigned int DUTY_TIME = 1000000 / (DUTY_FREQUENCY);
+
 #include <Arduino.h>
 
 #include "bus.h"
+#include "async_delay.h"
+#include "settings.h"
 
 
 bool outputs[27];
@@ -129,13 +133,14 @@ void matrix_driver::randomizeLocations() {
     }
 }
 
+AsyncDelay dutyCycle(ASYNC_MICROS);
+uint8_t delayCache = 0;
+
 void matrix_driver::update() {
-    static unsigned long last_loop(0);
 
-    // keep the loop as close to the specified clock speed as possible.
-    if(micros() - last_loop < FREQUENCY_DELAY)
-        delayMicroseconds(FREQUENCY_DELAY - micros() - last_loop);
-
+    if(!dutyCycle.finished(false)) {
+        delayMicroseconds(dutyCycle.timeLeft());
+    }
 
     uint8_t i = 9;
     while(i--) {
@@ -164,7 +169,11 @@ void matrix_driver::update() {
         // don't delay on the last loop, allow time for calculations after the function
         if(i)
             delayMicroseconds(FREQUENCY_DELAY);
-        else
-            last_loop = micros();
     }
+
+    if(delayCache != settings::update_time::get()) {
+        delayCache = settings::update_time::get();
+        dutyCycle.setDelay((255 - delayCache) / 255.0 * DUTY_TIME + FREQUENCY_DELAY);
+    }
+    dutyCycle.start();
 }

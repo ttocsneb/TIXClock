@@ -20,6 +20,8 @@ public:
     void start(unsigned long delay);
 
     bool finished(bool resetOnDone = true);
+
+    unsigned long timeLeft();
 };
 
 #endif
