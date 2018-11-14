@@ -17,6 +17,9 @@ AsyncDelay update_clock(ASYNC_MILLIS);
 bool just_changed_modes = true;
 
 void mode_time() {
+    if(just_changed_modes) {
+        update_clock.start(settings::update_time::get());
+    }
     if(just_changed_modes || update_clock.finished(true)) {
         just_changed_modes = false;
 
@@ -106,10 +109,87 @@ void mode_settings(Button select, Button back) {
     }
 }
 
+void mode_set_time(Button select, Button back) {
+    static uint8_t new_time[4];
+    static uint8_t selected_time = 0;
+    const uint8_t max_times[4] = {2, 9, 5, 9};
+
+    if(just_changed_modes) {
+        update_clock.start(500);
+
+        DateTime now = clock.now();
+        new_time[0] = now.hour() / 10;
+        new_time[1] = now.hour() % 10;
+        new_time[2] = now.minute() / 10;
+        new_time[3] = now.minute() % 10;
+    }
+
+    // process the blink
+    static bool blink(false);
+    if(update_clock.finished()) {
+        blink = !blink;
+    }
+    if(!blink) {
+        matrix_driver::setSection(selected_time, 0);
+    } else {
+        matrix_driver::setSection(selected_time, new_time[selected_time]);
+    }
+
+    // process the button presses
+    if(select.justPressed || back.justPressed) {
+        // on a short press of either button, increase or decrease the time
+
+        if(select.justPressed) {
+            new_time[selected_time]++;
+            
+            if(new_time[selected_time] > max_times[selected_time] ||
+                // edge case to wrap 24 hour days
+                (selected_time == 1 && new_time[selected_time] > 3)) {
+                new_time[selected_time] = 0;
+            }
+        } else {
+            new_time[selected_time]--;
+            
+            // we don't need to worry about the wrapping 24h edge case as
+            // the below case also covers it
+            if(new_time[selected_time] > max_times[selected_time]) {
+                new_time[selected_time] = max_times[selected_time];
+            }
+        }
+        
+        // an edge case to prevent more than 24 hour days
+        if(new_time[0] == 2) {
+            new_time[1] = min(new_time[1], 3);
+        }
+
+        if(blink) {
+            matrix_driver::setSection(selected_time, new_time[selected_time]);
+        }
+    } else if(select.justLongPressed) {
+        // on a long press of select, go the the next mode.
+        blink = false;
+        matrix_driver::setSection(selected_time, new_time[selected_time]);
+
+        selected_time++;
+        if(selected_time > 3) {
+            selected_time = 0;
+        }
+
+        matrix_driver::setSection(selected_time, 0);
+    } else if(back.justLongPressed) {
+        // on a long press of back, go back to the previous screen.
+        currentMode = MODE_SETTINGS;
+        just_changed_modes = true;
+    }
+}
+
 void modes::update(Button select, Button back) {
     switch(currentMode) {
     case MODE_SETTINGS:
         mode_settings(select, back);
+        break;
+    case MODE_SET_TIME:
+        mode_set_time(select, back);
         break;
     default:
     case MODE_TIME:
@@ -123,5 +203,5 @@ void modes::update(Button select, Button back) {
 }
 
 void modes::begin() {
-    update_clock.setDelay(settings::update_time::get());
+
 }
