@@ -10,14 +10,19 @@ class AsyncDelay {
 private:
     unsigned long start_time;
     unsigned long delay;
+    bool enabled;
+
     AsyncDelayType type;
 public:
-    AsyncDelay(AsyncDelayType delayType = ASYNC_MILLIS);
+    AsyncDelay(AsyncDelayType delayType = ASYNC_MILLIS, unsigned long delay = 0);
 
     void setDelay(unsigned long delay);
 
     void start();
     void start(unsigned long delay);
+
+    void enable(bool enable);
+    bool isEnabled();
 
     bool finished(bool resetOnDone = true);
 

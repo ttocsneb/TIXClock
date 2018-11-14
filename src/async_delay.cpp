@@ -2,9 +2,10 @@
 
 #include <Arduino.h>
 
-AsyncDelay::AsyncDelay(AsyncDelayType delayType) {
+AsyncDelay::AsyncDelay(AsyncDelayType delayType, unsigned long delay) {
     type = delayType;
     start_time = 0;
+    this->delay = delay;
 }
 
 void AsyncDelay::setDelay(unsigned long delay) {
@@ -23,6 +24,7 @@ unsigned long get_time(AsyncDelayType type) {
 
 void AsyncDelay::start() {
     start_time = get_time(type);
+    enabled = true;
 }
 
 void AsyncDelay::start(unsigned long delay) {
@@ -30,7 +32,19 @@ void AsyncDelay::start(unsigned long delay) {
     setDelay(delay);
 }
 
+void AsyncDelay::enable(bool enable) {
+    enabled = enable;
+}
+
+bool AsyncDelay::isEnabled() {
+    return enabled;
+}
+
 bool AsyncDelay::finished(bool resetOnDone) {
+    if(!enabled) {
+        return false;
+    }
+
     if(get_time(type) - start_time > delay) {
         if(resetOnDone) {
             start();
