@@ -3,7 +3,7 @@
 
 #include <stdint.h>
 
-#define FREQUENCY 480
+#define FREQUENCY 240
 #define DUTY_FREQUENCY 255
 
 namespace matrix_driver {
@@ -44,11 +44,6 @@ namespace matrix_driver {
      * Randomize the locations of the leds.
      */
     void randomizeLocations();
-
-    /**
-     * Actually display the leds.
-     */
-    void update();
 }
 
 #endif

@@ -1,6 +1,7 @@
 #include <Arduino.h>
 
 #include <RTClib.h>
+#include <avr/wdt.h>
 
 #include "matrix_driver.h"
 #include "modes.h"
@@ -36,6 +37,8 @@ uint8_t current_min;
 
 
 void setup() {
+    wdt_disable();
+
     // We don't need to start Wire as it is started in clock.
     clock.begin();
 
@@ -52,6 +55,9 @@ void setup() {
     const uint8_t rows[4] = {SEL_0, SEL_1, SEL_2, ROW_8};
     const uint8_t cols[3] = {COL_0, COL_1, COL_2};
     matrix_driver::begin(rows, cols, ENABLE);
+
+    // Setup the watchdog
+    wdt_enable(WDTO_500MS);
 }
 
 void updateTime() {
@@ -69,9 +75,9 @@ AsyncDelay bakDelay(ASYNC_MILLIS, 1000, false);
 AsyncDelay pressDelay(ASYNC_MILLIS, 5);
 
 void loop() {
+    wdt_reset();
+
     // Process the button presses
-
-
     static bool last_sel_state(false);
     static bool last_bak_state(false);
 
@@ -123,5 +129,8 @@ void loop() {
 
     modes::update(select, back);
 
-    matrix_driver::update();
+    // update at 60Hz
+    delay(16);
+
+    // matrix_driver::update();
 }

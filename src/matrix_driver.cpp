@@ -1,11 +1,14 @@
 #include "matrix_driver.h"
 
 // Calculate the delay(us) required to get the propper frequency
-const unsigned int FREQUENCY_DELAY = 1000000 / (FREQUENCY * 9)  / 3;
+const unsigned long FREQUENCY_DELAY = 1000000 / (FREQUENCY * 9)  / 3;
 
 const unsigned int DUTY_TIME = 1000000 / (DUTY_FREQUENCY);
 
 #include <Arduino.h>
+
+#include <avr/interrupt.h>
+#include <avr/io.h>
 
 #include "bus.h"
 #include "async_delay.h"
@@ -35,7 +38,8 @@ void matrix_driver::begin(const uint8_t _row_pins[4], const uint8_t _col_pins[3]
         delete row_bus;
         row_bus = NULL;
     }
-    row_bus = new Bus<uint8_t>(4, _row_pins);
+
+    row_bus = new Bus<uint8_t>(4,_row_pins);
     row_bus->begin(OUTPUT);
     row_bus->write(0);
 
@@ -56,6 +60,36 @@ void matrix_driver::begin(const uint8_t _row_pins[4], const uint8_t _col_pins[3]
             leds[i][ii] = false;
         }
     }
+
+    // Setup Timers
+    
+    // temporarily disable interrupts
+    SREG &= ~(1 << 7);
+
+    // disable any external pins on the timer
+    TCCR1A &= ~(0b1111 << 4); 
+
+    // Set the WGM bits
+    TCCR1A &= ~0b11; // disable WGM11 and WGM10
+    TCCR1B |= 0b11 << 3; // enable WGM13 and WGM12
+
+    // Set the Timer Clock to be 0b011 (64x prescaler ie. 1 count every 4us)
+    TCCR1C |= 0b11; // enable CS11 and CS10
+    TCCR1C &= ~(1 << 2); // disable CS12
+
+    // Set the Timer compare value
+    ICR1 = FREQUENCY_DELAY / 4;
+
+
+    // Enable the Interrupt register
+    TIMSK1 |= 1 << 1;
+
+    // reset the timer
+    TCNT1 = 0;
+
+    // enable interrupts again
+    SREG |= 1 << 7;
+    
 }
 
 void matrix_driver::setRow(uint8_t row, const bool set[3]) {
@@ -133,54 +167,27 @@ void matrix_driver::randomizeLocations() {
     }
 }
 
-AsyncDelay dutyCycle(ASYNC_MICROS);
-AsyncDelay lightOff(ASYNC_MICROS, FREQUENCY_DELAY);
-uint8_t delayCache = 0;
+ISR(TIMER1_COMPA_vect) {
+    static uint8_t row(0);
+    static uint8_t col(0);
 
-void matrix_driver::update() {
-    if(!lightOff.finished(false)) {
-        delayMicroseconds(dutyCycle.timeLeft());
-    }
 
-    uint8_t col = 3;
-    while(col--) {
-        digitalWrite(col_pins[col], LOW);
-    }
+    digitalWrite(col_pins[col], LOW);
 
-    // // Disable the brightness
-    // if(!dutyCycle.finished(false)) {
-    //     delayMicroseconds(dutyCycle.timeLeft());
-    // }
-
-    uint8_t i = 9;
-    while(i--) {
+    // update the current led
+    if(!col--) {
+        col = 2;
+        if(!row--) {
+            row = 8;
+        }
 
         // disable the decoder when drawing to row_8
-        digitalWrite(enable_pin, i != 8);
+        digitalWrite(enable_pin, row != 8);
 
         // enable the current row
-        row_bus->write(i);
-
-
-        // write the current row's leds.
-        col = 3;
-        while(col--) {
-            digitalWrite(col_pins[col], leds[i][col]);
-            // don't delay on the last loop, allow time for calculations after the function
-            if(i || col != 0) {
-                delayMicroseconds(FREQUENCY_DELAY);
-                digitalWrite(col_pins[col], LOW);
-            }
-        }
-
-        if(!i) {
-            lightOff.start();
-            dutyCycle.start();
-        }
+        row_bus->write(row);
     }
 
-    if(delayCache != settings::update_time::get()) {
-        delayCache = settings::update_time::get();
-        dutyCycle.setDelay((255 - delayCache) / 255.0 * DUTY_TIME + FREQUENCY_DELAY);
-    }
+    digitalWrite(col_pins[col], leds[row][col]);
+
 }

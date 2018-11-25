@@ -86,6 +86,13 @@ void mode_settings(Button select, Button back) {
         }
     };
 
+    if(select.justPressed) {
+        settingSelect++;
+        if(settingSelect > 2) {
+            settingSelect = 0;
+        }
+    }
+
     // Set the graphics for the current menu item
     if(select.justPressed || just_changed_modes) {
         just_changed_modes = false;
@@ -95,13 +102,7 @@ void mode_settings(Button select, Button back) {
         }
     }
     
-
-    if(select.justPressed) {
-        settingSelect++;
-        if(settingSelect > 2) {
-            settingSelect = 0;
-        }
-    } else if(select.justLongPressed) {
+    if(select.justLongPressed) {
         just_changed_modes = true;
         switch(settingSelect) {
         case TIM:
