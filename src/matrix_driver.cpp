@@ -109,8 +109,9 @@ void randomize_section(uint8_t sec) {
         // if the randomly chosen led is already lit, move to the
         // next one until it finds an unlit led
         uint8_t count = 0;
-        for(;*led_pointers[index] == true; index++) {
+        while(*led_pointers[index] == true) {
             // overflow on the led size
+            index++;
             if(index >= led_size) {
                 index = 0;
             }
@@ -141,20 +142,18 @@ void matrix_driver::update() {
         delayMicroseconds(dutyCycle.timeLeft());
     }
 
-    digitalWrite(enable_pin, LOW);
-    row_bus->write(0);
-
-    if(!dutyCycle.finished(false)) {
-        delayMicroseconds(dutyCycle.timeLeft());
+    uint8_t col = 3;
+    while(col--) {
+        digitalWrite(col_pins[col], LOW);
     }
+
+    // // Disable the brightness
+    // if(!dutyCycle.finished(false)) {
+    //     delayMicroseconds(dutyCycle.timeLeft());
+    // }
 
     uint8_t i = 9;
     while(i--) {
-        // disable the leds while changing rows.
-        uint8_t col = 3;
-        while(col--)
-            digitalWrite(col_pins[col], LOW);
-
 
         // disable the decoder when drawing to row_8
         digitalWrite(enable_pin, i != 8);

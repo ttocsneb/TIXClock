@@ -2,5 +2,9 @@
     "terminal.integrated.env.windows": {
         "PATH": "C:\\Users\\benja\\.platformio\\penv\\Scripts;C:\\Users\\benja\\.platformio\\penv;C:\\Program Files (x86)\\Common Files\\Oracle\\Java\\javapath;C:\\WINDOWS\\system32;C:\\WINDOWS;C:\\WINDOWS\\System32\\Wbem;C:\\WINDOWS\\System32\\WindowsPowerShell\\v1.0\\;C:\\Program Files\\PuTTY\\;C:\\Program Files\\Microsoft VS Code\\bin;C:\\Program Files\\Git\\cmd;E:\\programs\\ffmpeg-20180909-404d21f-win64-static\\bin;;C:\\WINDOWS\\System32\\OpenSSH\\;C:\\Program Files\\nodejs\\;C:\\Users\\benja\\AppData\\Local\\Microsoft\\WindowsApps;C:\\Users\\benja\\AppData\\Roaming\\npm;C:\\Program Files (x86)\\Common Files\\Oracle\\Java\\javapath;C:\\WINDOWS\\system32;C:\\WINDOWS;C:\\WINDOWS\\System32\\Wbem;C:\\WINDOWS\\System32\\WindowsPowerShell\\v1.0\\;C:\\Program Files\\PuTTY\\;C:\\Program Files\\Microsoft VS Code\\bin;C:\\Program Files\\Git\\cmd;E:\\programs\\ffmpeg-20180909-404d21f-win64-static\\bin;;C:\\WINDOWS\\System32\\OpenSSH\\;C:\\Program Files\\nodejs\\;C:\\Users\\benja\\AppData\\Local\\Microsoft\\WindowsApps;C:\\Users\\benja\\AppData\\Roaming\\npm",
         "PLATFORMIO_CALLER": "vscode"
+    },
+    "terminal.integrated.env.linux": {
+        "PATH": "/home/benja/.platformio/penv/bin:/home/benja/.platformio/penv:/home/benja/.local/bin:/home/benja/bin:/home/benja/.local/bin:/home/benja/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin",
+        "PLATFORMIO_CALLER": "vscode"
     }
 }

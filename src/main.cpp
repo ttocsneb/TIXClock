@@ -38,7 +38,10 @@ uint8_t current_min;
 void setup() {
     // We don't need to start Wire as it is started in clock.
     clock.begin();
-    
+
+    pinMode(BTN_BAK, INPUT_PULLUP);
+    pinMode(BTN_SEL, INPUT_PULLUP);
+
     //Set the time to 2359 if the time has stopped
     if(!clock.isrunning()) {
         clock.adjust(DateTime(2000, 1, 1, 23, 59, 0));
@@ -61,12 +64,13 @@ void updateTime() {
 
 // Set Time Functions
 
-AsyncDelay selDelay(ASYNC_MILLIS, 1500);
-AsyncDelay bakDelay(ASYNC_MILLIS, 1500);
+AsyncDelay selDelay(ASYNC_MILLIS, 1000, false);
+AsyncDelay bakDelay(ASYNC_MILLIS, 1000, false);
 AsyncDelay pressDelay(ASYNC_MILLIS, 5);
 
 void loop() {
     // Process the button presses
+
 
     static bool last_sel_state(false);
     static bool last_bak_state(false);
@@ -80,9 +84,10 @@ void loop() {
 
     // Process back button
     if(bak != last_bak_state && pressDelay.finished(true)) {
+        last_bak_state = bak;
         if(bak) {
             bakDelay.start();
-        } else if(bakDelay.finished(false)) {
+        } else if(bakDelay.isEnabled() && !bakDelay.finished(false)) {
             // the press was shorter than a long press,
             // therefore it is a short press.
             back.justPressed = true;
@@ -98,9 +103,10 @@ void loop() {
     }
     // Process select button
     if(sel != last_sel_state && pressDelay.finished(true)) {
+        last_sel_state = sel;
         if(sel) {
             selDelay.start();
-        } else if(selDelay.finished(false)) {
+        } else if(selDelay.isEnabled() && !selDelay.finished(false)) {
             // the press was shorter than a long press,
             // therefore it is a short press.
             select.justPressed = true;

@@ -2,10 +2,11 @@
 
 #include <Arduino.h>
 
-AsyncDelay::AsyncDelay(AsyncDelayType delayType, unsigned long delay) {
+AsyncDelay::AsyncDelay(AsyncDelayType delayType, unsigned long delay, bool enabled) {
     type = delayType;
     start_time = 0;
     this->delay = delay;
+    this->enable(enabled);
 }
 
 void AsyncDelay::setDelay(unsigned long delay) {

@@ -14,7 +14,7 @@ private:
 
     AsyncDelayType type;
 public:
-    AsyncDelay(AsyncDelayType delayType = ASYNC_MILLIS, unsigned long delay = 0);
+    AsyncDelay(AsyncDelayType delayType = ASYNC_MILLIS, unsigned long delay = 0, bool enabled = true);
 
     void setDelay(unsigned long delay);
 

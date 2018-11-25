@@ -41,17 +41,23 @@ void mode_settings(Button select, Button back) {
     #define UPD 2
     static uint8_t settingSelect(0);
 
+    if(just_changed_modes) {
+        settingSelect = 0;
+    }
+
+    
+
     const bool GRAPHICS[3][9][3] = {
         // TIME GRAPHICS
         {
+            {0, 0, 1},
             {1, 0, 0},
-            {0, 0, 1},
             {1, 1, 1},
-            {0, 0, 1},
+            {1, 0, 0},
             {1, 1, 1},
             {0, 0, 0},
             {1, 1, 1},
-            {0, 1, 1},
+            {1, 1, 0},
             {1, 1, 1}
         },
         // BRIGHTNESS GRAPHICS
@@ -59,45 +65,26 @@ void mode_settings(Button select, Button back) {
             {0, 1, 0},
             {1, 1, 1},
             {1, 1, 1},
-            {1, 1, 0},
+            {0, 1, 1},
             {1, 1, 1},
-            {0, 0, 1},
+            {1, 0, 0},
             {1, 0, 1},
             {1, 1, 1},
             {1, 0, 1}
         },
         // UPDATE GRAPHICS
         {
-            {0, 0, 1},
-            {1, 1, 1},
             {1, 0, 0},
             {1, 1, 1},
+            {0, 0, 1},
             {1, 1, 1},
-            {0, 1, 1},
+            {1, 1, 1},
+            {1, 1, 0},
             {1, 1, 1},
             {1, 0, 1},
             {0, 1, 0}
         }
     };
-
-    if(select.justPressed) {
-        settingSelect++;
-        if(settingSelect > 2) {
-            settingSelect = 0;
-        }
-    } else if(select.justLongPressed) {
-        switch(settingSelect) {
-        case TIM:
-            currentMode = MODE_SET_TIME;
-        case BRI:
-            currentMode = MODE_SET_BRIGHTNESS;
-        case UPD:
-            currentMode = MODE_SET_UPDATE;
-        }
-    } else if(back.justPressed || back.justLongPressed) {
-        currentMode = MODE_TIME;
-        just_changed_modes = true;
-    }
 
     // Set the graphics for the current menu item
     if(select.justPressed || just_changed_modes) {
@@ -107,26 +94,60 @@ void mode_settings(Button select, Button back) {
             matrix_driver::setRow(r, GRAPHICS[settingSelect][r]);
         }
     }
+    
+
+    if(select.justPressed) {
+        settingSelect++;
+        if(settingSelect > 2) {
+            settingSelect = 0;
+        }
+    } else if(select.justLongPressed) {
+        just_changed_modes = true;
+        switch(settingSelect) {
+        case TIM:
+            currentMode = MODE_SET_TIME;
+            break;
+        case BRI:
+            currentMode = MODE_SET_BRIGHTNESS;
+            break;
+        case UPD:
+            currentMode = MODE_SET_UPDATE;
+            break;
+        }
+    } else if(back.justPressed || back.justLongPressed) {
+        currentMode = MODE_TIME;
+        just_changed_modes = true;
+    }
+
 }
+
+AsyncDelay blink_light(ASYNC_MILLIS, 333);
 
 void mode_set_time(Button select, Button back) {
     static uint8_t new_time[4];
-    static uint8_t selected_time = 0;
+    static uint8_t selected_time(0);
     const uint8_t max_times[4] = {2, 9, 5, 9};
 
     if(just_changed_modes) {
-        update_clock.start(500);
+        just_changed_modes = false;
+
+        selected_time = 0;
 
         DateTime now = clock.now();
         new_time[0] = now.hour() / 10;
         new_time[1] = now.hour() % 10;
         new_time[2] = now.minute() / 10;
         new_time[3] = now.minute() % 10;
+
+        uint8_t i = 4;
+        while(i--) {
+            matrix_driver::setSection(i, new_time[i]);
+        }
     }
 
     // process the blink
     static bool blink(false);
-    if(update_clock.finished()) {
+    if(blink_light.finished(true)) {
         blink = !blink;
     }
     if(!blink) {
@@ -159,7 +180,10 @@ void mode_set_time(Button select, Button back) {
     } else if(select.justLongPressed) {
         // on a long press of select, go the the next mode.
         blink = false;
-        matrix_driver::setSection(selected_time, new_time[selected_time]);
+        uint8_t i = 4;
+        while(i--) {
+            matrix_driver::setSection(i, new_time[i]);
+        }
 
         selected_time++;
         if(selected_time > 3) {
@@ -171,6 +195,8 @@ void mode_set_time(Button select, Button back) {
         // on a long press of back, go back to the previous screen.
         currentMode = MODE_SETTINGS;
         just_changed_modes = true;
+
+        clock.adjust(DateTime(0, 0, 0, new_time[0] * 10 + new_time[1], new_time[2] * 10 + new_time[3], 0));
     }
 }
 
@@ -182,7 +208,7 @@ void mode_set_brightness(Button select, Button back) {
         const bool b[3][3] = {
             {1, 1, 1},
             {1, 1, 1},
-            {1, 1, 0}
+            {0, 1, 1}
         };
         matrix_driver::setRow(1, b[0]);
         matrix_driver::setRow(2, b[1]);
