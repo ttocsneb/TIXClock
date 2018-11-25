@@ -119,7 +119,6 @@ void mode_settings(Button select, Button back) {
         currentMode = MODE_TIME;
         just_changed_modes = true;
     }
-
 }
 
 AsyncDelay blink_light(ASYNC_MILLIS, 333);

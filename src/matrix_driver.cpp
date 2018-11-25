@@ -89,7 +89,6 @@ void matrix_driver::begin(const uint8_t _row_pins[4], const uint8_t _col_pins[3]
 
     // enable interrupts again
     SREG |= 1 << 7;
-    
 }
 
 void matrix_driver::setRow(uint8_t row, const bool set[3]) {
@@ -189,5 +188,4 @@ ISR(TIMER1_COMPA_vect) {
     }
 
     digitalWrite(col_pins[col], leds[row][col]);
-
 }
