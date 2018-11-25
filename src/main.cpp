@@ -38,6 +38,11 @@ uint8_t current_min;
 void setup() {
     // We don't need to start Wire as it is started in clock.
     clock.begin();
+    
+    //Set the time to 2359 if the time has stopped
+    if(!clock.isrunning()) {
+        clock.adjust(DateTime(2000, 1, 1, 23, 59, 0));
+    }
 
     settings::begin();
 

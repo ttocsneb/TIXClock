@@ -1,7 +1,7 @@
 #include "matrix_driver.h"
 
 // Calculate the delay(us) required to get the propper frequency
-const unsigned int FREQUENCY_DELAY = 1000000 / (FREQUENCY * 9);
+const unsigned int FREQUENCY_DELAY = 1000000 / (FREQUENCY * 9)  / 3;
 
 const unsigned int DUTY_TIME = 1000000 / (DUTY_FREQUENCY);
 
@@ -15,7 +15,6 @@ const unsigned int DUTY_TIME = 1000000 / (DUTY_FREQUENCY);
 bool outputs[27];
 
 Bus<uint8_t> *row_bus = NULL;
-uint8_t row_8;
 uint8_t col_pins[3];
 uint8_t enable_pin;
 
@@ -28,7 +27,6 @@ const uint8_t section_index[5] = {0, 1, 4, 6, 9};
 void matrix_driver::begin(const uint8_t _row_pins[4], const uint8_t _col_pins[3], uint8_t _enable_pin) {
     // set the row pins
     memcpy(col_pins, _col_pins, sizeof(uint8_t) * 3);
-    row_8 = _row_pins[3];
     enable_pin = _enable_pin;
 
     // Setup all the pins to be outputs
@@ -37,7 +35,7 @@ void matrix_driver::begin(const uint8_t _row_pins[4], const uint8_t _col_pins[3]
         delete row_bus;
         row_bus = NULL;
     }
-    row_bus = new Bus<uint8_t>(3, _row_pins);
+    row_bus = new Bus<uint8_t>(4, _row_pins);
     row_bus->begin(OUTPUT);
     row_bus->write(0);
 
@@ -48,9 +46,6 @@ void matrix_driver::begin(const uint8_t _row_pins[4], const uint8_t _col_pins[3]
     }
     pinMode(enable_pin, OUTPUT);
     digitalWrite(enable_pin, LOW);
-
-    pinMode(row_8, OUTPUT);
-    digitalWrite(row_8, LOW);
 
 
     //Make sure that all the leds are off by default
@@ -102,7 +97,8 @@ void randomize_section(uint8_t sec) {
         uint8_t l = 3;
         while(l--) {
             led_pointers[i * 3 + l] = &leds[i + section_index[sec]][l];
-            leds[i + section_index[sec]][l] = false;
+            // clear the section.
+            *led_pointers[i * 3 + l] = false;
         }
     }
 
@@ -112,12 +108,17 @@ void randomize_section(uint8_t sec) {
 
         // if the randomly chosen led is already lit, move to the
         // next one until it finds an unlit led
-        while(*led_pointers[index]) {
-            index++;
+        uint8_t count = 0;
+        for(;*led_pointers[index] == true; index++) {
             // overflow on the led size
             if(index >= led_size) {
                 index = 0;
             }
+            //prevent infinite loops
+            if(count > led_size) {
+                break;
+            }
+            count++;
         }
 
         *led_pointers[index] = true;
@@ -132,9 +133,17 @@ void matrix_driver::randomizeLocations() {
 }
 
 AsyncDelay dutyCycle(ASYNC_MICROS);
+AsyncDelay lightOff(ASYNC_MICROS, FREQUENCY_DELAY);
 uint8_t delayCache = 0;
 
 void matrix_driver::update() {
+    if(!lightOff.finished(false)) {
+        delayMicroseconds(dutyCycle.timeLeft());
+    }
+
+    digitalWrite(enable_pin, LOW);
+    row_bus->write(0);
+
     if(!dutyCycle.finished(false)) {
         delayMicroseconds(dutyCycle.timeLeft());
     }
@@ -147,29 +156,32 @@ void matrix_driver::update() {
             digitalWrite(col_pins[col], LOW);
 
 
+        // disable the decoder when drawing to row_8
+        digitalWrite(enable_pin, i != 8);
+
         // enable the current row
         row_bus->write(i);
-        // row_8 is enabled on the value 8
-        bool row_8 = i == 8;
-        digitalWrite(row_8, row_8);
-        // disable the decoder when drawing to row_8
-        digitalWrite(enable_pin, !row_8);
 
 
         // write the current row's leds.
         col = 3;
-        while(col--)
+        while(col--) {
             digitalWrite(col_pins[col], leds[i][col]);
-        
+            // don't delay on the last loop, allow time for calculations after the function
+            if(i || col != 0) {
+                delayMicroseconds(FREQUENCY_DELAY);
+                digitalWrite(col_pins[col], LOW);
+            }
+        }
 
-        // don't delay on the last loop, allow time for calculations after the function
-        if(i)
-            delayMicroseconds(FREQUENCY_DELAY);
+        if(!i) {
+            lightOff.start();
+            dutyCycle.start();
+        }
     }
 
     if(delayCache != settings::update_time::get()) {
         delayCache = settings::update_time::get();
         dutyCycle.setDelay((255 - delayCache) / 255.0 * DUTY_TIME + FREQUENCY_DELAY);
     }
-    dutyCycle.start();
 }

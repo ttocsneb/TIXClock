@@ -3,7 +3,7 @@
 
 #include <stdint.h>
 
-#define FREQUENCY 1000
+#define FREQUENCY 480
 #define DUTY_FREQUENCY 255
 
 namespace matrix_driver {
